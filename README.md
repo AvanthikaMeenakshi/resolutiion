@@ -4,7 +4,7 @@
 
 ```
 git clone https://github.com/AvanthikaMeenakshi/resolutiion.git
-cd your-repo
+cd resolutiion
 ```
 
 2. Install dependencies
@@ -25,6 +25,13 @@ npx tsx prisma/seed.ts
 
 ```
 npm run dev
+```
+
+5. To lint and type check
+
+```
+npm run typechec
+npm run lint
 ```
 
 Navigate to http://localhost:3000 to view the app.
