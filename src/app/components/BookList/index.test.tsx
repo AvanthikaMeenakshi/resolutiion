@@ -2,39 +2,30 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import BookList from "./";
 import { Book } from "@/types";
 
-beforeAll(() => {
-  jest.useFakeTimers();
-  jest.setSystemTime(new Date("2025-08-07T00:00:00Z"));
-});
-
-afterAll(() => {
-  jest.useRealTimers();
-});
-
 // This will have its own unit tests
 jest.mock("./ReadStatusDropdown", () => ({
   __esModule: true,
   default: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
-const mockBooks: Book[] = [
-  {
-    id: 1,
-    title: "Book One",
-    author: "Author One",
-    read: true,
-    createdAt: new Date(),
-  },
-  {
-    id: 2,
-    title: "Book Two",
-    author: "Author Two",
-    read: false,
-    createdAt: new Date(),
-  },
-];
-
 describe("BookList", () => {
+  const mockBooks: Book[] = [
+    {
+      id: 1,
+      title: "Book One",
+      author: "Author One",
+      read: true,
+      createdAt: new Date(),
+    },
+    {
+      id: 2,
+      title: "Book Two",
+      author: "Author Two",
+      read: false,
+      createdAt: new Date(),
+    },
+  ];
+
   it("renders a list of books", () => {
     render(<BookList books={mockBooks} />);
 
@@ -45,12 +36,12 @@ describe("BookList", () => {
     // Authors
     expect(
       screen.getByText(
-        `Author One · Added on: ${new Date().toLocaleDateString()}`
+        `Author One · Added on: ${new Date().toLocaleDateString("en-GB")}`
       )
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        `Author Two · Added on: ${new Date().toLocaleDateString()}`
+        `Author Two · Added on: ${new Date().toLocaleDateString("en-GB")}`
       )
     ).toBeInTheDocument();
   });

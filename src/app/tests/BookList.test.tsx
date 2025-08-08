@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import BooksPage from "@/app/page";
 import { getBooks, addBook, toggleRead } from "@/server/books/actions";
+import toast from "react-hot-toast";
 
+jest.mock("react-hot-toast", () => {
+  return {
+    error: jest.fn(),
+  };
+});
 jest.mock("@/server/books/actions", () => ({
   getBooks: jest.fn(),
   addBook: jest.fn(),
@@ -25,22 +31,18 @@ const mockBooks = [
     title: "The Alchemist",
     author: "Paulo Coelho",
     read: true,
-    createdAt: new Date("2025-08-07T00:00:00Z"),
+    createdAt: new Date(),
   },
   {
     id: 2,
     title: "The Prophet",
     author: "Kahlil Gibran",
     read: false,
-    createdAt: new Date("2025-08-06T00:00:00Z"),
+    createdAt: new Date(),
   },
 ];
 
 describe("BooksPage", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("renders books fetched from getBooks()", async () => {
     jest.mocked(getBooks).mockResolvedValue({
       ok: true,
@@ -104,5 +106,69 @@ describe("BooksPage", () => {
     fireEvent.click(action);
 
     await waitFor(() => expect(toggleRead).toHaveBeenCalled());
+  });
+
+  it("shows an error if getBooks fails", async () => {
+    jest.mocked(getBooks).mockResolvedValue({
+      ok: false,
+      error: "Failed to fetch books",
+    });
+
+    const page = await BooksPage();
+    render(page);
+
+    await waitFor(() => {
+      expect(screen.getByText("Failed to fetch books")).toBeInTheDocument();
+    });
+  });
+
+  it("shows an error if addBook fails", async () => {
+    jest.mocked(getBooks).mockResolvedValue({ ok: true, data: mockBooks });
+    jest
+      .mocked(addBook)
+      .mockResolvedValue({ ok: false, error: "Failed to add book" });
+
+    render(await BooksPage());
+
+    fireEvent.click(screen.getByText("Add Book"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Fail Book" },
+    });
+    fireEvent.change(screen.getByLabelText("Author"), {
+      target: { value: "Fail Author" },
+    });
+
+    fireEvent.click(screen.getByText("Save"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Failed to add book")).toBeInTheDocument();
+    });
+  });
+
+  it("shows an error if toggleRead fails", async () => {
+    jest.mocked(getBooks).mockResolvedValue({ ok: true, data: mockBooks });
+    jest
+      .mocked(toggleRead)
+      .mockResolvedValue({ ok: false, error: "Toggle failed" });
+
+    render(await BooksPage());
+
+    await waitFor(() => {
+      expect(screen.getByText("Unread")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Unread"));
+    fireEvent.click(screen.getByText("Mark as read"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Something went wrong updating read status"
+      );
+    });
   });
 });
